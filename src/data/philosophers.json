@@ -1,25 +1,6 @@
 [
-  {
-    "id": "jphilll",
-    "name": "J Philll",
-    "publicationName": "New Means",
-    "substackUrl": "https://www.jphilll.com",
-    "rssUrl": "https://www.jphilll.com/feed"
-  },
-  {
-    "id": "slavoj",
-    "name": "Slavoj Žižek",
-    "publicationName": "ŽIŽEK GOADS AND PRODS",
-    "substackUrl": "https://slavoj.substack.com",
-    "rssUrl": "https://slavoj.substack.com/feed"
-  },
-  {
-    "id": "theorygang",
-    "name": "Theory Gang",
-    "publicationName": "Theory Gang",
-    "substackUrl": "https://theorygang.substack.com",
-    "rssUrl": "https://theorygang.substack.com/feed"
-  },
+  
+
   {
     "id": "marxandfriends",
     "name": "Marx and Friends",
@@ -28,10 +9,28 @@
     "rssUrl": "https://marxandfriends.substack.com/feed"
   },
   {
-    "id": "samantharosehill",
-    "name": "Samantha Rose Hill",
-    "publicationName": "Reflections by Samantha Rose Hill",
-    "substackUrl": "https://samantharosehill.substack.com",
-    "rssUrl": "https://samantharosehill.substack.com/feed"
-  }
+    "id": "romaricjannel",
+    "name": "Romaric Jannel",
+    "publicationName": "Philosophy and Beyond",
+    "substackUrl": "https://romaricjannel.substack.com",
+    "rssUrl": "https://romaricjannel.substack.com/feed"
+  },
+
+  {
+  "id": "mattfujimoto",
+  "name": "Matt Fujimoto",
+  "publicationName": "Freelance Philosophy",
+  "substackUrl": "https://mattfujimoto.substack.com",
+  "rssUrl": "https://mattfujimoto.substack.com/feed"
+},
+
+{
+  "id": "philosophypublics",
+  "name": "Philosophy Publics",
+  "publicationName": "Philosophy Publics",
+  "substackUrl": "https://philosophypublics.substack.com",
+  "rssUrl": "https://philosophypublics.substack.com/feed"
+}
+
+
 ]

@@ -99,20 +99,42 @@ function renderPosts(posts, clearExisting = false) {
   const postsHTML = posts
     .map((post) => {
       const initial = post.title.charAt(0).toUpperCase();
+
+      // Construct author profile URL if possible
+      let authorProfileUrl = null;
+
+      // Check if the post has a substackUrl property or if we can extract it from the post link
+      if (post.substackUrl) {
+        // If we have a direct Substack URL for the author
+        authorProfileUrl = `https://substack.com/@${
+          post.substackUrl.split("@")[1] ||
+          post.author.toLowerCase().replace(/\s+/g, "")
+        }`;
+      } else if (post.link && post.link.includes("substack.com")) {
+        // Try to extract the Substack domain from the post link
+        const match = post.link.match(/https:\/\/(.*?)\.substack\.com/);
+        if (match && match[1]) {
+          // Construct the author profile URL using the Substack subdomain
+          authorProfileUrl = `https://substack.com/@${match[1]}`;
+        }
+      }
+
       return `
       <article class="post-card">
         <div class="post-image-container">
-          ${
-            post.coverImage
-              ? `<img src="${post.coverImage}" alt="${post.title}" class="post-image" 
-                 onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%2290%22 viewBox=%220 0 120 90%22><rect width=%22120%22 height=%2290%22 fill=%22%23f0f0f0%22 /><text x=%2260%22 y=%2245%22 font-size=%2224%22 text-anchor=%22middle%22 fill=%22%23333%22>${initial}</text></svg>'">`
-              : `<div class="post-image-placeholder">
-               <svg width="120" height="90" viewBox="0 0 120 90">
-                 <rect width="120" height="90" fill="#f0f0f0" />
-                 <text x="60" y="45" font-size="24" text-anchor="middle" fill="#333">${initial}</text>
-               </svg>
-             </div>`
-          }
+          <a href="${post.link}" target="_blank">
+            ${
+              post.coverImage
+                ? `<img src="${post.coverImage}" alt="${post.title}" class="post-image" 
+                   onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%2290%22 viewBox=%220 0 120 90%22><rect width=%22120%22 height=%2290%22 fill=%22%23f0f0f0%22 /><text x=%2260%22 y=%2245%22 font-size=%2224%22 text-anchor=%22middle%22 fill=%22%23333%22>${initial}</text></svg>'">`
+                : `<div class="post-image-placeholder">
+                 <svg width="120" height="90" viewBox="0 0 120 90">
+                   <rect width="120" height="90" fill="#f0f0f0" />
+                   <text x="60" y="45" font-size="24" text-anchor="middle" fill="#333">${initial}</text>
+                 </svg>
+               </div>`
+            }
+          </a>
         </div>
         <div class="post-content">
           <h2 class="post-title">
@@ -120,7 +142,16 @@ function renderPosts(posts, clearExisting = false) {
           </h2>
           <p class="post-subtitle">${post.subtitle || ""}</p>
           <div class="post-meta">
-            <span>${post.author} · ${post.publicationName}</span>
+            <span>
+              ${
+                authorProfileUrl
+                  ? `<a href="${authorProfileUrl}" target="_blank" class="author-link">${post.author}</a>`
+                  : post.author
+              } · 
+              <a href="${post.link}" target="_blank" class="publication-link">${
+        post.publicationName
+      }</a>
+            </span>
             <span>${formatDate(post.publishDate)}</span>
           </div>
         </div>
