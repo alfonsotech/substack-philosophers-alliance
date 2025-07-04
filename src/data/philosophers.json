@@ -1,0 +1,37 @@
+[
+  {
+    "id": "jphilll",
+    "name": "J Philll",
+    "publicationName": "New Means",
+    "substackUrl": "https://www.jphilll.com",
+    "rssUrl": "https://www.jphilll.com/feed"
+  },
+  {
+    "id": "slavoj",
+    "name": "Slavoj Žižek",
+    "publicationName": "ŽIŽEK GOADS AND PRODS",
+    "substackUrl": "https://slavoj.substack.com",
+    "rssUrl": "https://slavoj.substack.com/feed"
+  },
+  {
+    "id": "theorygang",
+    "name": "Theory Gang",
+    "publicationName": "Theory Gang",
+    "substackUrl": "https://theorygang.substack.com",
+    "rssUrl": "https://theorygang.substack.com/feed"
+  },
+  {
+    "id": "marxandfriends",
+    "name": "Marx and Friends",
+    "publicationName": "Marx and Friends",
+    "substackUrl": "https://marxandfriends.substack.com",
+    "rssUrl": "https://marxandfriends.substack.com/feed"
+  },
+  {
+    "id": "samantharosehill",
+    "name": "Samantha Rose Hill",
+    "publicationName": "Reflections by Samantha Rose Hill",
+    "substackUrl": "https://samantharosehill.substack.com",
+    "rssUrl": "https://samantharosehill.substack.com/feed"
+  }
+]
