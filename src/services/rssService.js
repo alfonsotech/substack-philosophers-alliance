@@ -14,13 +14,32 @@ const parser = new RssParser({
   },
 });
 
-// Update the cache directories for Netlify
-const CACHE_DIR = process.env.NETLIFY
-  ? "/tmp/cache"
+// Define the cache directories - use /tmp for Netlify Functions
+const isNetlify = process.env.NETLIFY === "true";
+const CACHE_DIR = isNetlify
+  ? path.join("/tmp", "cache")
   : path.join(__dirname, "../data/cache");
 
 const POSTS_FILE = path.join(CACHE_DIR, "all-posts.json");
-fs.ensureDirSync(CACHE_DIR);
+
+// Ensure the cache directory exists, with error handling
+try {
+  fs.ensureDirSync(CACHE_DIR);
+  console.log(`Cache directory created at: ${CACHE_DIR}`);
+} catch (error) {
+  console.error(`Error creating cache directory: ${error.message}`);
+  // Fallback to a different location if needed
+  if (isNetlify) {
+    console.log("Falling back to /tmp directory");
+    CACHE_DIR = "/tmp";
+    POSTS_FILE = path.join(CACHE_DIR, "all-posts.json");
+    try {
+      fs.ensureDirSync(CACHE_DIR);
+    } catch (innerError) {
+      console.error(`Error creating fallback directory: ${innerError.message}`);
+    }
+  }
+}
 
 // Track the latest posts for change detection
 let latestPostsTimestamps = {};
