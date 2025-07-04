@@ -5,7 +5,6 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "netlify dev",
     "build": "mkdir -p netlify/functions && cp -r src netlify/functions/"
   },
   "keywords": [

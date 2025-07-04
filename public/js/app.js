@@ -73,10 +73,19 @@ function showNewContentNotification(data) {
 async function fetchPhilosophers() {
   try {
     const response = await fetch("/api/philosophers");
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
+    }
     philosophers = await response.json();
+    if (!Array.isArray(philosophers)) {
+      console.error("Philosophers data is not an array:", philosophers);
+      philosophers = []; // Ensure it's an array
+    }
     renderPhilosophers();
   } catch (error) {
     console.error("Error fetching philosophers:", error);
+    // Show error message to user
+    philosophersList.innerHTML = `<li class="error">Failed to load philosophers. Please try again later.</li>`;
   }
 }
 
@@ -118,21 +127,30 @@ async function fetchPosts(page = 1, search = "") {
     if (search) url.searchParams.append("search", search);
 
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
+    }
+
     const data = await response.json();
 
-    // Update hasMorePosts flag based on server response
-    hasMorePosts = data.hasMore;
+    // Ensure posts is an array
+    const posts = Array.isArray(data.posts) ? data.posts : [];
+    hasMorePosts = data.hasMore || false;
 
-    // Render posts (clear existing if it's the first page)
-    renderPosts(data.posts, page === 1);
-
-    // Update current page
+    renderPosts(posts, page === 1);
     currentPage = page;
   } catch (error) {
     console.error("Error fetching posts:", error);
+    // Show error message to user
+    if (currentPage === 1) {
+      postsContainer.innerHTML = `
+        <div class="error-message">
+          <p>Failed to load posts. Please try again later.</p>
+        </div>
+      `;
+    }
   } finally {
     isLoading = false;
-    // Only show loading indicator if there are more posts to load
     loadingElement.style.display = hasMorePosts ? "block" : "none";
   }
 }
