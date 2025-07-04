@@ -62,14 +62,19 @@ async function fetchPosts(page = 1, search = "") {
     const response = await fetch(url);
     const data = await response.json();
 
+    // Update hasMorePosts flag based on server response
     hasMorePosts = data.hasMore;
 
+    // Render posts (clear existing if it's the first page)
     renderPosts(data.posts, page === 1);
+
+    // Update current page
     currentPage = page;
   } catch (error) {
     console.error("Error fetching posts:", error);
   } finally {
     isLoading = false;
+    // Only show loading indicator if there are more posts to load
     loadingElement.style.display = hasMorePosts ? "block" : "none";
   }
 }
@@ -113,7 +118,7 @@ function renderPosts(posts, clearExisting = false) {
           <h2 class="post-title">
             <a href="${post.link}" target="_blank">${post.title}</a>
           </h2>
-          <p class="post-subtitle">${post.subtitle}</p>
+          <p class="post-subtitle">${post.subtitle || ""}</p>
           <div class="post-meta">
             <span>${post.author} · ${post.publicationName}</span>
             <span>${formatDate(post.publishDate)}</span>
@@ -141,11 +146,13 @@ function formatDate(dateString) {
 function handleScroll() {
   if (isLoading || !hasMorePosts) return;
 
+  // Calculate scroll position
   const scrollPosition = window.innerHeight + window.scrollY;
   const bodyHeight = document.body.offsetHeight;
 
   // Load more posts when user scrolls to bottom (with 200px threshold)
   if (bodyHeight - scrollPosition < 200) {
+    console.log("Loading more posts...", currentPage + 1);
     fetchPosts(currentPage + 1, currentSearch);
   }
 }

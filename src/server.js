@@ -33,7 +33,7 @@ app.get("/api/philosophers", (req, res) => {
 });
 
 app.get("/api/posts", (req, res) => {
-  const { search, page = 1, limit = 20 } = req.query;
+  const { search, page = 1, limit = 10 } = req.query;
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
 
@@ -50,15 +50,20 @@ app.get("/api/posts", (req, res) => {
     );
   }
 
+  // Calculate total pages
+  const totalPosts = posts.length;
+  const totalPages = Math.ceil(totalPosts / limitNum);
+
   // Apply pagination
   const startIndex = (pageNum - 1) * limitNum;
   const endIndex = pageNum * limitNum;
   const paginatedPosts = posts.slice(startIndex, endIndex);
 
   res.json({
-    total: posts.length,
+    total: totalPosts,
     page: pageNum,
     limit: limitNum,
+    hasMore: pageNum < totalPages,
     posts: paginatedPosts,
   });
 });
