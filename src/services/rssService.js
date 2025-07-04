@@ -14,8 +14,11 @@ const parser = new RssParser({
   },
 });
 
-// Define the cache directories
-const CACHE_DIR = path.join(__dirname, "../data/cache");
+// Update the cache directories for Netlify
+const CACHE_DIR = process.env.NETLIFY
+  ? "/tmp/cache"
+  : path.join(__dirname, "../data/cache");
+
 const POSTS_FILE = path.join(CACHE_DIR, "all-posts.json");
 fs.ensureDirSync(CACHE_DIR);
 

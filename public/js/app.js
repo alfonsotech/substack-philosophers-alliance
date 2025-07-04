@@ -11,13 +11,20 @@ const postsContainer = document.getElementById("posts-container");
 const loadingElement = document.getElementById("loading");
 const searchInput = document.getElementById("search-input");
 
-// Connect to Socket.IO
-const socket = io();
+// Socket.IO connection (only if available)
+let socket;
+try {
+  if (typeof io !== "undefined") {
+    socket = io();
 
-// Listen for new content notifications
-socket.on("newContent", (data) => {
-  showNewContentNotification(data);
-});
+    // Listen for new content notifications
+    socket.on("newContent", (data) => {
+      showNewContentNotification(data);
+    });
+  }
+} catch (error) {
+  console.log("Socket.IO not available, real-time updates disabled");
+}
 
 // Function to show a notification when new content is available
 function showNewContentNotification(data) {
