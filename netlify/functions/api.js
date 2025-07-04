@@ -111,15 +111,18 @@ app.get("/api/philosophers/:id/posts", (req, res) => {
 app.get("/api/philosophers/:id/logo", (req, res) => {
   try {
     const { id } = req.params;
-    const logoUrl = rssService.getPhilosopherLogo(id);
 
-    if (logoUrl) {
-      // Redirect to the actual logo URL
-      res.redirect(logoUrl);
-    } else {
-      // Instead of redirecting, send a 404 status
-      res.status(404).json({ error: "Logo not found" });
+    // Find the philosopher
+    const philosopher = philosophers.find((p) => p.id === id);
+
+    if (!philosopher) {
+      return res.status(404).json({ error: "Philosopher not found" });
     }
+
+    // For Netlify, we'll use a default approach instead of trying to read files
+    // Just redirect to the Substack URL favicon
+    const substackDomain = new URL(philosopher.substackUrl).hostname;
+    res.redirect(`https://${substackDomain}/favicon.ico`);
   } catch (error) {
     console.error(`Error in /api/philosophers/${req.params.id}/logo:`, error);
     res

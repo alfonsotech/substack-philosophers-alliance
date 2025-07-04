@@ -11,19 +11,21 @@ const postsContainer = document.getElementById("posts-container");
 const loadingElement = document.getElementById("loading");
 const searchInput = document.getElementById("search-input");
 
-// Socket.IO connection (only if available)
-let socket;
-try {
-  if (typeof io !== "undefined") {
-    socket = io();
+// Check if we're running on Netlify (no Socket.io)
+const isNetlify = window.location.hostname.includes("netlify.app");
 
-    // Listen for new content notifications
+// Only try to connect to Socket.io if not on Netlify
+let socket;
+if (!isNetlify && typeof io !== "undefined") {
+  try {
+    socket = io();
     socket.on("newContent", (data) => {
-      showNewContentNotification(data);
+      console.log("New content available:", data);
+      // Handle new content notification
     });
+  } catch (error) {
+    console.log("Socket.io connection failed:", error);
   }
-} catch (error) {
-  console.log("Socket.IO not available, real-time updates disabled");
 }
 
 // Function to show a notification when new content is available
