@@ -11,6 +11,57 @@ const postsContainer = document.getElementById("posts-container");
 const loadingElement = document.getElementById("loading");
 const searchInput = document.getElementById("search-input");
 
+// Connect to Socket.IO
+const socket = io();
+
+// Listen for new content notifications
+socket.on("newContent", (data) => {
+  showNewContentNotification(data);
+});
+
+// Function to show a notification when new content is available
+function showNewContentNotification(data) {
+  // Create notification element
+  const notification = document.createElement("div");
+  notification.className = "new-content-notification";
+
+  // Create notification content
+  notification.innerHTML = `
+    <div class="notification-content">
+      <h3>New Content Available!</h3>
+      <p>${data.count} new posts have been published.</p>
+      <button class="refresh-button">Refresh Now</button>
+      <button class="dismiss-button">Dismiss</button>
+    </div>
+  `;
+
+  // Add to the DOM
+  document.body.appendChild(notification);
+
+  // Add event listeners
+  notification
+    .querySelector(".refresh-button")
+    .addEventListener("click", () => {
+      // Reset to page 1 and fetch fresh content
+      currentPage = 1;
+      fetchPosts(1, currentSearch);
+      notification.remove();
+    });
+
+  notification
+    .querySelector(".dismiss-button")
+    .addEventListener("click", () => {
+      notification.remove();
+    });
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      notification.remove();
+    }
+  }, 10000);
+}
+
 // Fetch philosophers
 async function fetchPhilosophers() {
   try {

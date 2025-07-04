@@ -19,6 +19,9 @@ const CACHE_DIR = path.join(__dirname, "../data/cache");
 const POSTS_FILE = path.join(CACHE_DIR, "all-posts.json");
 fs.ensureDirSync(CACHE_DIR);
 
+// Track the latest posts for change detection
+let latestPostsTimestamps = {};
+
 // Extract subtitle from content or description
 function extractSubtitle(content, description) {
   // Try to extract from content first
@@ -78,6 +81,41 @@ function extractImage(item) {
   return null;
 }
 
+// Function to save posts to storage
+function savePosts(philosopherId, posts) {
+  try {
+    // Ensure the cache directory exists
+    fs.ensureDirSync(CACHE_DIR);
+
+    // Save the posts for this philosopher
+    const cacheFile = path.join(CACHE_DIR, `${philosopherId}.json`);
+    fs.writeJsonSync(cacheFile, posts);
+
+    // Update the all-posts file
+    const allPosts = getAllPosts();
+
+    // Remove existing posts from this philosopher
+    const filteredPosts = allPosts.filter(
+      (post) => post.philosopherId !== philosopherId
+    );
+
+    // Add the new posts
+    const updatedPosts = [...filteredPosts, ...posts];
+
+    // Sort by publish date (newest first)
+    updatedPosts.sort(
+      (a, b) => new Date(b.publishDate) - new Date(a.publishDate)
+    );
+
+    // Save the updated all-posts file
+    fs.writeJsonSync(POSTS_FILE, updatedPosts);
+
+    console.log(`Saved ${posts.length} posts for ${philosopherId}`);
+  } catch (error) {
+    console.error(`Error saving posts for ${philosopherId}:`, error);
+  }
+}
+
 // Fetch feed for a philosopher
 async function fetchFeed(philosopher) {
   try {
@@ -104,12 +142,6 @@ async function fetchFeed(philosopher) {
     const posts = feed.items.map((item) => {
       // Extract cover image from enclosure, content, or description
       const coverImage = extractImage(item);
-
-      if (coverImage) {
-        console.log(`Found image for post "${item.title}": ${coverImage}`);
-      } else {
-        console.log(`No image found for post "${item.title}"`);
-      }
 
       return {
         id: item.guid || item.link,
@@ -150,27 +182,86 @@ function getPhilosopherLogo(philosopherId) {
 
 // Refresh all feeds
 async function refreshAllFeeds(philosophers) {
-  console.log("Refreshing all feeds...");
+  console.log(
+    `Starting feed refresh for ${philosophers.length} philosophers...`
+  );
 
-  const allPosts = [];
+  let newContentFound = false;
+  let updatedFeeds = 0;
+  let newPosts = [];
 
   for (const philosopher of philosophers) {
-    const posts = await fetchFeed(philosopher);
-    allPosts.push(...posts);
+    try {
+      // Make sure we have a valid RSS URL before trying to fetch
+      if (!philosopher || !philosopher.rssUrl) {
+        console.error(`Missing RSS URL for philosopher:`, philosopher);
+        continue; // Skip this philosopher and continue with the next one
+      }
 
-    // Cache individual philosopher's posts
-    const cacheFile = path.join(CACHE_DIR, `${philosopher.id}.json`);
-    await fs.writeJson(cacheFile, posts);
+      console.log(`Fetching feed for ${philosopher.name}...`);
+      const posts = await fetchFeed(philosopher);
+
+      // Check if we have new content
+      if (posts.length > 0) {
+        const latestPostDate = new Date(posts[0].publishDate).getTime();
+        const previousLatestPostDate =
+          latestPostsTimestamps[philosopher.id] || 0;
+
+        if (latestPostDate > previousLatestPostDate) {
+          // We found new content!
+          newContentFound = true;
+          updatedFeeds++;
+
+          // Store the new posts that weren't there before
+          const newPostsFromThisFeed = posts.filter(
+            (post) =>
+              new Date(post.publishDate).getTime() > previousLatestPostDate
+          );
+
+          newPosts.push(
+            ...newPostsFromThisFeed.map((post) => ({
+              ...post,
+              philosopherId: philosopher.id,
+              philosopherName: philosopher.name,
+            }))
+          );
+
+          // Update our timestamp record
+          latestPostsTimestamps[philosopher.id] = latestPostDate;
+        }
+
+        // Save the posts to your storage
+        savePosts(philosopher.id, posts);
+      }
+    } catch (error) {
+      console.error(`Error refreshing feed for ${philosopher.name}:`, error);
+    }
   }
 
-  // Sort all posts by date (newest first)
-  allPosts.sort((a, b) => new Date(b.publishDate) - new Date(a.publishDate));
+  if (newContentFound) {
+    // Emit an event or trigger a notification
+    emitNewContentEvent(newPosts);
+  }
 
-  // Save all posts to a single file
-  await fs.writeJson(POSTS_FILE, allPosts);
+  return {
+    updated: updatedFeeds,
+    newContentFound,
+    newPosts,
+  };
+}
 
-  console.log(`Refreshed feeds: ${allPosts.length} posts found`);
-  return allPosts;
+// Function to emit events when new content is found
+function emitNewContentEvent(newPosts) {
+  // If you're using Socket.IO or a similar library
+  if (global.io) {
+    global.io.emit("newContent", {
+      count: newPosts.length,
+      posts: newPosts.slice(0, 5), // Send only the first 5 new posts to avoid large payloads
+    });
+  }
+
+  // Store the latest posts for API access
+  global.latestNewPosts = newPosts;
 }
 
 // Get all posts
@@ -187,7 +278,7 @@ function getAllPosts() {
 }
 
 // Get posts for a specific philosopher
-function getPhilosopherPosts(philosopherId) {
+function getPostsByPhilosopher(philosopherId) {
   const cacheFile = path.join(CACHE_DIR, `${philosopherId}.json`);
 
   if (fs.existsSync(cacheFile)) {
@@ -204,6 +295,7 @@ function getPhilosopherPosts(philosopherId) {
 module.exports = {
   refreshAllFeeds,
   getAllPosts,
-  getPhilosopherPosts,
+  getPostsByPhilosopher,
   getPhilosopherLogo,
+  getLatestNewPosts: () => global.latestNewPosts || [],
 };

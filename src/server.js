@@ -3,10 +3,17 @@ const cors = require("cors");
 const path = require("path");
 const cron = require("node-cron");
 const fs = require("fs-extra");
+const http = require("http");
+const socketIo = require("socket.io");
 const rssService = require("./services/rssService");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Make sure this is defined
+const server = http.createServer(app);
+const io = socketIo(server);
+
+// Make io available globally
+global.io = io;
 
 // Middleware
 app.use(cors());
@@ -208,7 +215,21 @@ app.get("/api/check-images/:id", async (req, res) => {
   }
 });
 
+// Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
+
+// Add a new API endpoint to get the latest new posts
+app.get("/api/latest-posts", (req, res) => {
+  res.json(rssService.getLatestNewPosts());
+});
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
