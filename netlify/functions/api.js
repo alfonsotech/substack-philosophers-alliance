@@ -1,26 +1,7 @@
 const express = require("express");
 const serverless = require("serverless-http");
 const cors = require("cors");
-const path = require("path");
-const fs = require("fs-extra");
-
-// Set Netlify environment variable
-process.env.NETLIFY = "true";
-
-// Import rssService with try/catch to handle potential errors
-let rssService;
-try {
-  rssService = require("../../src/services/rssService");
-} catch (error) {
-  console.error("Error loading rssService:", error);
-  // Create a minimal mock service if the real one fails to load
-  rssService = {
-    getAllPosts: () => [],
-    getPostsByPhilosopher: () => [],
-    getPhilosopherLogo: () => null,
-    getLatestNewPosts: () => [],
-  };
-}
+const { connectToDatabase } = require("./utils/mongodb");
 
 const app = express();
 
@@ -28,122 +9,103 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Simple test route to verify the function is working
-app.get("/api/test", (req, res) => {
-  res.json({ message: "API is working!" });
-});
-
 // Load philosophers data
-let philosophers = [];
-try {
-  // Use require instead of fs.readJsonSync for Netlify Functions
-  philosophers = require("../../src/data/philosophers.json");
-  console.log(
-    `Loaded ${philosophers.length} philosophers from philosophers.json`
-  );
-} catch (error) {
-  console.error("Error loading philosophers data:", error);
-  philosophers = []; // Fallback to empty array
-}
+const philosophers = require("../../src/data/philosophers.json");
 
 // API Routes
 app.get("/api/philosophers", (req, res) => {
   res.json(philosophers);
 });
 
-app.get("/api/posts", (req, res) => {
+// Get posts with MongoDB
+app.get("/api/posts", async (req, res) => {
   try {
     const { search, page = 1, limit = 20 } = req.query;
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
-    let posts = [];
-    try {
-      posts = rssService.getAllPosts();
-    } catch (error) {
-      console.error("Error getting posts:", error);
+    // Connect to MongoDB
+    const db = await connectToDatabase();
+    const postsCollection = db.collection("posts");
+
+    // Build query
+    let query = {};
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query = {
+        $or: [
+          { title: searchRegex },
+          { subtitle: searchRegex },
+          { author: searchRegex },
+        ],
+      };
     }
 
-    // Apply search filter if provided
-    if (search && posts.length > 0) {
-      const searchLower = search.toLowerCase();
-      posts = posts.filter(
-        (post) =>
-          post.title.toLowerCase().includes(searchLower) ||
-          post.subtitle.toLowerCase().includes(searchLower) ||
-          post.author.toLowerCase().includes(searchLower)
-      );
-    }
+    // Get total count
+    const total = await postsCollection.countDocuments(query);
 
-    // Apply pagination
-    const startIndex = (pageNum - 1) * limitNum;
-    const endIndex = pageNum * limitNum;
-    const paginatedPosts = posts.slice(startIndex, endIndex);
+    // Get paginated posts
+    const posts = await postsCollection
+      .find(query)
+      .sort({ publishDate: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .toArray();
 
     res.json({
-      total: posts.length,
+      total,
       page: pageNum,
       limit: limitNum,
-      posts: paginatedPosts,
-      hasMore: endIndex < posts.length,
+      posts,
+      hasMore: pageNum * limitNum < total,
     });
   } catch (error) {
-    console.error("Error in /api/posts:", error);
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    console.error("Error fetching posts:", error);
+    res.status(500).json({ error: "Failed to fetch posts" });
   }
 });
 
-app.get("/api/philosophers/:id/posts", (req, res) => {
+// Get posts for a specific philosopher
+app.get("/api/philosophers/:id/posts", async (req, res) => {
   try {
     const { id } = req.params;
-    const posts = rssService.getPostsByPhilosopher(id);
+
+    // Connect to MongoDB
+    const db = await connectToDatabase();
+    const postsCollection = db.collection("posts");
+
+    // Get posts for this philosopher
+    const posts = await postsCollection
+      .find({ philosopherId: id })
+      .sort({ publishDate: -1 })
+      .toArray();
+
     res.json(posts);
   } catch (error) {
-    console.error(`Error in /api/philosophers/${req.params.id}/posts:`, error);
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    console.error(
+      `Error fetching posts for philosopher ${req.params.id}:`,
+      error
+    );
+    res.status(500).json({ error: "Failed to fetch posts" });
   }
 });
 
+// Get philosopher logo
 app.get("/api/philosophers/:id/logo", (req, res) => {
-  try {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    // Find the philosopher
-    const philosopher = philosophers.find((p) => p.id === id);
+  // Find the philosopher
+  const philosopher = philosophers.find((p) => p.id === id);
 
-    if (!philosopher) {
-      return res.status(404).json({ error: "Philosopher not found" });
-    }
-
-    // For Netlify, we'll use a default approach instead of trying to read files
-    // Just redirect to the Substack URL favicon
-    const substackDomain = new URL(philosopher.substackUrl).hostname;
-    res.redirect(`https://${substackDomain}/favicon.ico`);
-  } catch (error) {
-    console.error(`Error in /api/philosophers/${req.params.id}/logo:`, error);
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+  if (!philosopher) {
+    return res.status(404).json({ error: "Philosopher not found" });
   }
+
+  // For Netlify, we'll use a default approach
+  // Just redirect to the Substack URL favicon
+  const substackDomain = new URL(philosopher.substackUrl).hostname;
+  res.redirect(`https://${substackDomain}/favicon.ico`);
 });
-
-// Get all posts with error handling
-function getAllPosts() {
-  try {
-    if (fs.existsSync(POSTS_FILE)) {
-      return fs.readJsonSync(POSTS_FILE);
-    }
-  } catch (error) {
-    console.error("Error reading posts file:", error);
-  }
-
-  // If we can't read the file or it doesn't exist, return an empty array
-  return [];
-}
 
 // Export the serverless function
 module.exports.handler = serverless(app);
