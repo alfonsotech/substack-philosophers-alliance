@@ -26,11 +26,16 @@
 
 {
   "id": "philosophypublics",
-  "name": "Philosophy Publics",
+  "name": "Mona Mona",
   "publicationName": "Philosophy Publics",
   "substackUrl": "https://philosophypublics.substack.com",
   "rssUrl": "https://philosophypublics.substack.com/feed"
+},
+{
+  "id": "threeminutephilosophy",
+  "name": "Three Minute Philosophy",
+  "publicationName": "Three Minute Philosophy",
+  "substackUrl": "https://threeminutephilosophy.substack.com",
+  "rssUrl": "https://threeminutephilosophy.substack.com/feed"
 }
-
-
 ]
