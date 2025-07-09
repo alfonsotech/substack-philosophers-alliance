@@ -37,5 +37,13 @@
   "publicationName": "Three Minute Philosophy",
   "substackUrl": "https://threeminutephilosophy.substack.com",
   "rssUrl": "https://threeminutephilosophy.substack.com/feed"
+},
+{
+  "id": "kosmotheoros",
+  "name": "Terrence Thomson",
+  "publicationName": "Kosmotheoros",
+  "substackUrl": "https://kosmotheoros.substack.com",
+  "rssUrl": "https://kosmotheoros.substack.com/feed"
 }
+
 ]
