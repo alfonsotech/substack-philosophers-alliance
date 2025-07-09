@@ -197,6 +197,16 @@ function renderPosts(posts, clearExisting = false) {
         }
       }
 
+      // Extract publication URL from the post link
+      let publicationUrl = post.link;
+      if (post.link && post.link.includes("substack.com")) {
+        // Extract the base Substack URL (without the specific post path)
+        const match = post.link.match(/(https:\/\/.*?\.substack\.com)/);
+        if (match && match[1]) {
+          publicationUrl = match[1];
+        }
+      }
+
       return `
       <article class="post-card">
         <div class="post-image-container">
@@ -226,7 +236,7 @@ function renderPosts(posts, clearExisting = false) {
                   ? `<a href="${authorProfileUrl}" target="_blank" class="author-link">${post.author}</a>`
                   : post.author
               } · 
-              <a href="${post.link}" target="_blank" class="publication-link">${
+              <a href="${publicationUrl}" target="_blank" class="publication-link">${
         post.publicationName
       }</a>
             </span>
