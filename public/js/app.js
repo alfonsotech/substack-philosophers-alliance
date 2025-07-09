@@ -83,6 +83,10 @@ async function fetchPhilosophers() {
       console.error("Philosophers data is not an array:", philosophers);
       philosophers = []; // Ensure it's an array
     }
+
+    // Sort philosophers alphabetically by name
+    philosophers.sort((a, b) => a.name.localeCompare(b.name));
+
     renderPhilosophers();
   } catch (error) {
     console.error("Error fetching philosophers:", error);
