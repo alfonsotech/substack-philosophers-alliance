@@ -71,7 +71,7 @@
   },
   {
     "id": "theexistentialreader",
-    "name": "The Existential Reader",
+    "name": "Craig Snelgrove",
     "publicationName": "The Existential Reader",
     "substackUrl": "https://theexistentialreader.substack.com",
     "rssUrl": "https://theexistentialreader.substack.com/feed"
@@ -82,5 +82,26 @@
     "publicationName": "Insert Philosophy Here",
     "substackUrl": "https://dgilesphd.substack.com",
     "rssUrl": "https://dgilesphd.substack.com/feed"
+  },
+  {
+    "id": "davidlivingstonesmith",
+    "name": "David Livingstone Smith",
+    "publicationName": "Dehumanization Matters",
+    "substackUrl": "https://davidlivingstonesmith.substack.com",
+    "rssUrl": "https://davidlivingstonesmith.substack.com/feed"
+  },
+  {
+    "id": "noellemcafee",
+    "name": "Noelle McAfee",
+    "publicationName": "Noelle McAfee",
+    "substackUrl": "https://noellemcafee.substack.com",
+    "rssUrl": "https://noellemcafee.substack.com/feed"
+  },
+  {
+    "id": "ericalucaststonestreet",
+    "name": "Erica Lucast Stonestreet",
+    "publicationName": "Humaning is Hard, but Philosophy Can Help",
+    "substackUrl": "https://ericalucaststonestreet.substack.com",
+    "rssUrl": "https://ericalucaststonestreet.substack.com/feed"
   }
 ]
